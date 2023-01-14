@@ -92,7 +92,7 @@ Function Start-Failback {
   Write-Output -InputObject "Starting failover"
   Set-AzContext -Subscription $env:SUBSCRIPTIONID        
 
-  $staticRoute = New-AzStaticRoute -Name SD-WAN-1 -AddressPrefix @("192.168.128.0/24", "10.5.5.0/24") -NextHopIpAddress 172.18.3.4
+  $staticRoute = New-AzStaticRoute -Name SD-WAN-1 -AddressPrefix @("192.168.128.0/24", "10.5.5.0/24") -NextHopIpAddress 172.18.2.4
   $associatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
   $propagatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
   $updatedRoutingConfiguration= New-AzRoutingConfiguration -AssociatedRouteTable $associatedTable.Id -Label @("testLabel") -Id @($propagatedTable.Id) -StaticRoute @($staticRoute)
