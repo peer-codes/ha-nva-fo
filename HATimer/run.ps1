@@ -37,9 +37,11 @@ Function Start-Failover {
   Set-AzContext -Subscription $env:SUBSCRIPTIONID        
     
   
-  $firewall2 = Get-AzVirtualHubVnetConnection -Name "Meraki-vmx2" -ResourceGroupName $VirtualHubResourceGroupName -ParentResourceName $VirtualHubName
-  $route2 = New-AzVHubRoute -Name $RouteName -Destination @("192.168.128.0/24", "10.5.5.0/24") -DestinationType "CIDR" -NextHop $firewall2.Id -NextHopType "ResourceId"
-  Update-AzVHubRouteTable -ResourceGroupName $VirtualHubResourceGroupName -VirtualHubName $VirtualHubName -Name $RouteTableName -Route @($route2)
+  $staticRoute = New-AzStaticRoute -Name SD-WAN-1 -AddressPrefix @("192.168.128.0/24", "10.5.5.0/24") -NextHopIpAddress 172.18.3.4
+  $associatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
+  $propagatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
+  $updatedRoutingConfiguration= New-AzRoutingConfiguration -AssociatedRouteTable $associatedTable.Id -Label @("testLabel") -Id @($propagatedTable.Id) -StaticRoute @($staticRoute)
+  Update-AzVirtualHubVnetConnection -ResourceGroupName UK_Network -VirtualHubName UK_vWAN_Hub -Name Meraki-vmx1 -RoutingConfiguration $updatedRoutingConfiguration
 
   Write-Output -InputObject "Failover done"
 
@@ -90,9 +92,11 @@ Function Start-Failback {
   Write-Output -InputObject "Starting failover"
   Set-AzContext -Subscription $env:SUBSCRIPTIONID        
 
-  $firewall1 = Get-AzVirtualHubVnetConnection -Name "Meraki-vmx1" -ResourceGroupName $VirtualHubResourceGroupName -ParentResourceName $VirtualHubName
-  $route1 = New-AzVHubRoute -Name $RouteName -Destination @("192.168.128.0/24", "10.5.5.0/24") -DestinationType "CIDR" -NextHop $firewall1.Id -NextHopType "ResourceId"
-  Update-AzVHubRouteTable -ResourceGroupName $VirtualHubResourceGroupName -VirtualHubName $VirtualHubName -Name $RouteTableName -Route @($route1)
+  $staticRoute = New-AzStaticRoute -Name SD-WAN-1 -AddressPrefix @("192.168.128.0/24", "10.5.5.0/24") -NextHopIpAddress 172.18.3.4
+  $associatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
+  $propagatedTable = Get-AzVHubRouteTable -ResourceGroupName UK_Network  -VirtualHubName UK_vWAN_Hub -Name defaultRouteTable
+  $updatedRoutingConfiguration= New-AzRoutingConfiguration -AssociatedRouteTable $associatedTable.Id -Label @("testLabel") -Id @($propagatedTable.Id) -StaticRoute @($staticRoute)
+  Update-AzVirtualHubVnetConnection -ResourceGroupName UK_Network -VirtualHubName UK_vWAN_Hub -Name Meraki-vmx1 -RoutingConfiguration $updatedRoutingConfiguration
 
   Write-Output -InputObject "Failback done"
   
